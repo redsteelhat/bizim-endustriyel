@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import Image from "next/image";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 type Product = {
   id: number;
@@ -218,19 +219,28 @@ export default function Home() {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [wishlist, setWishlist] = useState<number[]>([]);
   const [toast, setToast] = useState("");
+  const cartHydrated = useRef(false);
 
   useEffect(() => {
     const savedCart = window.localStorage.getItem("bizim-endustriyel-cart");
     if (savedCart) {
       try {
-        setCart(JSON.parse(savedCart));
+        const parsedCart = JSON.parse(savedCart) as CartItem[];
+        queueMicrotask(() => {
+          cartHydrated.current = true;
+          setCart(parsedCart);
+        });
       } catch {
         window.localStorage.removeItem("bizim-endustriyel-cart");
+        cartHydrated.current = true;
       }
+    } else {
+      cartHydrated.current = true;
     }
   }, []);
 
   useEffect(() => {
+    if (!cartHydrated.current) return;
     window.localStorage.setItem("bizim-endustriyel-cart", JSON.stringify(cart));
   }, [cart]);
 
@@ -396,7 +406,7 @@ export default function Home() {
                         setSearchOpen(false);
                       }}
                     >
-                      <img src={product.image} alt="" />
+                      <Image src={product.image} alt="" width={48} height={44} sizes="48px" />
                       <span><strong>{product.name}</strong><small>{product.code}</small></span>
                       <b>{currency.format(product.price)}</b>
                     </button>
@@ -461,7 +471,13 @@ export default function Home() {
               </div>
             </div>
             <div className="hero-visual">
-              <img src="/images/hero-workbench.jpg" alt="Profesyonel bir atölyede endüstriyel el aletleri" />
+              <Image
+                src="/images/hero-workbench.jpg"
+                alt="Profesyonel bir atölyede endüstriyel el aletleri"
+                fill
+                priority
+                sizes="(max-width: 900px) 100vw, 48vw"
+              />
               <div className="hero-image-shade" />
               <div className="hero-visual-topline">
                 <span>BİZİM / PRO SERİ</span><span>2026</span>
@@ -503,7 +519,12 @@ export default function Home() {
                   key={category.name}
                   onClick={() => chooseCategory(category.name)}
                 >
-                  <img src={category.image} alt="" />
+                  <Image
+                    src={category.image}
+                    alt=""
+                    fill
+                    sizes="(max-width: 680px) 80vw, (max-width: 900px) 50vw, 34vw"
+                  />
                   <span className="category-overlay" />
                   <span className="category-index">0{index + 1}</span>
                   <span className="category-content">
@@ -570,7 +591,12 @@ export default function Home() {
                 return (
                   <article className="product-card" key={product.id}>
                     <div className="product-image-wrap">
-                      <img src={product.image} alt={product.name} />
+                      <Image
+                        src={product.image}
+                        alt={product.name}
+                        fill
+                        sizes="(max-width: 680px) 100vw, (max-width: 1180px) 50vw, 25vw"
+                      />
                       <span className="product-badge">{product.badge}</span>
                       {discount > 0 && <span className="discount-badge">−%{discount}</span>}
                       <button
@@ -633,7 +659,12 @@ export default function Home() {
         <section className="trade-section" id="kurumsal">
           <div className="site-shell trade-grid">
             <div className="trade-image">
-              <img src="/images/workshop.jpg" alt="Endüstriyel bakım atölyesi ve çalışma masası" />
+              <Image
+                src="/images/workshop.jpg"
+                alt="Endüstriyel bakım atölyesi ve çalışma masası"
+                fill
+                sizes="(max-width: 900px) 100vw, 47vw"
+              />
               <div className="trade-stamp"><span>B2B</span><small>KURUMSAL<br />TEDARİK</small></div>
             </div>
             <div className="trade-copy">
@@ -693,7 +724,12 @@ export default function Home() {
         <section className="find-product">
           <div className="site-shell find-product-inner">
             <div className="find-visual">
-              <img src="/images/fasteners.jpg" alt="Farklı ölçülerde metal bağlantı elemanları" />
+              <Image
+                src="/images/fasteners.jpg"
+                alt="Farklı ölçülerde metal bağlantı elemanları"
+                fill
+                sizes="(max-width: 680px) 100vw, 42vw"
+              />
               <span className="finder-cross cross-one">+</span>
               <span className="finder-cross cross-two">+</span>
             </div>
@@ -814,8 +850,9 @@ export default function Home() {
       </button>
 
       {cartOpen && (
-        <div className="overlay" role="presentation" onMouseDown={() => setCartOpen(false)}>
-          <aside className="cart-drawer" role="dialog" aria-modal="true" aria-label="Sepetim" onMouseDown={(event) => event.stopPropagation()}>
+        <div className="overlay">
+          <button type="button" className="overlay-backdrop" aria-label="Sepeti kapat" onClick={() => setCartOpen(false)} />
+          <aside className="cart-drawer" role="dialog" aria-modal="true" aria-label="Sepetim">
             <div className="drawer-header">
               <div><span>SEPETİM</span><small>{cartCount} ürün</small></div>
               <button type="button" aria-label="Sepeti kapat" onClick={() => setCartOpen(false)}>×</button>
@@ -833,7 +870,7 @@ export default function Home() {
                 <div className="cart-items">
                   {cart.map((item) => (
                     <article className="cart-item" key={item.id}>
-                      <img src={item.image} alt="" />
+                      <Image src={item.image} alt="" width={78} height={86} sizes="78px" />
                       <div className="cart-item-info">
                         <small>{item.code}</small>
                         <h3>{item.name}</h3>
@@ -867,11 +904,17 @@ export default function Home() {
       )}
 
       {quickProduct && (
-        <div className="overlay modal-overlay" role="presentation" onMouseDown={() => setQuickProduct(null)}>
-          <div className="quick-modal" role="dialog" aria-modal="true" aria-labelledby="quick-product-title" onMouseDown={(event) => event.stopPropagation()}>
+        <div className="overlay modal-overlay">
+          <button type="button" className="overlay-backdrop" aria-label="Hızlı incelemeyi kapat" onClick={() => setQuickProduct(null)} />
+          <div className="quick-modal" role="dialog" aria-modal="true" aria-labelledby="quick-product-title">
             <button type="button" className="modal-close" aria-label="Hızlı incelemeyi kapat" onClick={() => setQuickProduct(null)}>×</button>
             <div className="quick-image">
-              <img src={quickProduct.image} alt={quickProduct.name} />
+              <Image
+                src={quickProduct.image}
+                alt={quickProduct.name}
+                fill
+                sizes="(max-width: 680px) 100vw, 52vw"
+              />
               <span>{quickProduct.badge}</span>
             </div>
             <div className="quick-copy">
@@ -894,8 +937,9 @@ export default function Home() {
       )}
 
       {quoteOpen && (
-        <div className="overlay modal-overlay" role="presentation" onMouseDown={() => setQuoteOpen(false)}>
-          <div className="quote-modal" role="dialog" aria-modal="true" aria-labelledby="quote-title" onMouseDown={(event) => event.stopPropagation()}>
+        <div className="overlay modal-overlay">
+          <button type="button" className="overlay-backdrop" aria-label="Teklif formunu kapat" onClick={() => setQuoteOpen(false)} />
+          <div className="quote-modal" role="dialog" aria-modal="true" aria-labelledby="quote-title">
             <button type="button" className="modal-close" aria-label="Teklif formunu kapat" onClick={() => setQuoteOpen(false)}>×</button>
             <div className="quote-intro">
               <span className="micro-label">HIZLI TEKLİF MASASI</span>
@@ -929,15 +973,16 @@ export default function Home() {
               </div>
               <label><span>ÜRÜN / TALEP DETAYI *</span><textarea name="request" required rows={5} placeholder="Ürün adı, stok kodu, ölçü, adet veya kullanım alanı…" /></label>
               <label className="consent"><input type="checkbox" required /><span>İletişim bilgilerimin teklif süreci için kullanılmasını kabul ediyorum.</span></label>
-              <button type="submit" className="button button-primary">TALEBİ WHATSAPP'TA PAYLAŞ <span>↗</span></button>
+              <button type="submit" className="button button-primary">TALEBİ WHATSAPP&apos;TA PAYLAŞ <span>↗</span></button>
             </form>
           </div>
         </div>
       )}
 
       {mobileMenu && (
-        <div className="overlay mobile-menu-overlay" role="presentation" onMouseDown={() => setMobileMenu(false)}>
-          <nav className="mobile-menu" aria-label="Mobil menü" onMouseDown={(event) => event.stopPropagation()}>
+        <div className="overlay mobile-menu-overlay">
+          <button type="button" className="overlay-backdrop" aria-label="Menüyü kapat" onClick={() => setMobileMenu(false)} />
+          <nav className="mobile-menu" aria-label="Mobil menü">
             <div className="drawer-header"><span>MENÜ</span><button type="button" aria-label="Menüyü kapat" onClick={() => setMobileMenu(false)}>×</button></div>
             {navItems.map(([label, href], index) => (
               <a href={href} key={href} onClick={() => setMobileMenu(false)}><span>0{index + 1}</span>{label}<b>↗</b></a>

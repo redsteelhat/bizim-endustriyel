@@ -16,8 +16,8 @@ Bizim Endüstriyel için hazırlanmış, satış ve kurumsal teklif dönüşüm�
 
 - React 19
 - TypeScript
-- Vinext / Vite
-- Cloudflare Workers uyumlu çıktı
+- Next.js 16 App Router
+- Vercel uyumlu üretim çıktısı
 - Özel responsive CSS tasarım sistemi
 
 ## Yerel Geliştirme
@@ -38,7 +38,7 @@ npm test
 
 ## Vercel Dağıtımı
 
-Repo Vercel'e bağlandıktan sonra standart kurulum akışı kullanılabilir. Proje Vinext tabanlı olduğu için Vercel dağıtımından önce yapılandırmanın hedef çalışma ortamıyla uyumluluğu doğrulanmalıdır.
+Repo Vercel'e bağlandığında Next.js otomatik algılanır. Framework Preset `Next.js`, Root Directory `./` olarak bırakılabilir; Build ve Output Directory alanları için özel override gerekmez.
 
 ## İçerik Notu
 
